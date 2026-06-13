@@ -1,0 +1,12 @@
+[bar]
+location = "top"
+scale = 1.0
+
+[[bar.layout]]
+monitor = "*"
+left = ["dashboard"]
+center = ["clock"]
+right = ["volume", "network", "bluetooth", "battery"]
+
+[modules.clock]
+format = "%a %d %b  %H:%M"
