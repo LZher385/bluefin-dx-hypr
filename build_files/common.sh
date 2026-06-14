@@ -45,6 +45,7 @@ dnf5 install -y \
   xdg-desktop-portal-hyprland \
   hyprlock \
   kitty \
+  alacritty \
   fuzzel \
   cliphist \
   brightnessctl \
@@ -52,7 +53,8 @@ dnf5 install -y \
   slurp \
   pavucontrol \
   fd-find \
-  ripgrep
+  ripgrep \
+  jq
 
 # --- kanata: fetch pinned release, verify sha256, install ---
 TMP="$(mktemp -d)"
