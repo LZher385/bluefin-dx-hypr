@@ -93,7 +93,9 @@ dnf5 remove -y \
   gtk4-devel gtk4-layer-shell-devel gtksourceview5-devel \
   pulseaudio-libs-devel fftw-devel pipewire-devel systemd-devel \
   libxkbcommon-devel wayland-devel \
-  cmake pkgconf-pkg-config
+  cmake
+# Note: pkgconf-pkg-config is intentionally kept — it was already installed as
+# a dep of kmod (required by systemd-udev), and removing it breaks the base.
 dnf5 autoremove -y || true
 
 # --- Ship default skel configs ---
