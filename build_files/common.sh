@@ -70,10 +70,13 @@ EOF
 echo uinput >/etc/modules-load.d/uinput.conf
 
 # --- Wayle: build from source, install to /usr, strip toolchain in same layer ---
+# libxkbcommon-devel and wayland-devel are required by transitive crates
+# (smithay-client-toolkit, etc.) even though upstream's Fedora list omits them.
 dnf5 install -y \
   git cmake pkgconf-pkg-config clang gcc \
   gtk4-devel gtk4-layer-shell-devel gtksourceview5-devel \
   pulseaudio-libs-devel fftw-devel pipewire-devel systemd-devel \
+  libxkbcommon-devel wayland-devel \
   rust cargo
 
 WAYLE_SRC="$(mktemp -d)"
@@ -89,6 +92,7 @@ dnf5 remove -y \
   rust cargo clang \
   gtk4-devel gtk4-layer-shell-devel gtksourceview5-devel \
   pulseaudio-libs-devel fftw-devel pipewire-devel systemd-devel \
+  libxkbcommon-devel wayland-devel \
   cmake pkgconf-pkg-config
 dnf5 autoremove -y || true
 
