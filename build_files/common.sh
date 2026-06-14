@@ -5,14 +5,16 @@ KANATA_VERSION="v1.11.0"
 KANATA_SHA256="d9f634afb4c7f078cc2aacf3998fd65b432d4d83296cc48a89f941525459b4e2"
 WAYLE_VERSION="v0.6.0"
 
-# --- omadora/hyprland-omadora COPR ---
-# Fedora 44 retired the in-tree hyprland packages. omadora is the actively
-# maintained Fedora COPR (used by the Omadora distro); its aquamarine is built
-# against libdisplay-info.so.3 which matches Fedora 44's libdisplay-info-0.3.0.
+# --- eli-xciv/hyprland COPR ---
+# Fedora 44 retired the in-tree hyprland packages. We need a COPR that both
+# (a) ships the full hyprland/hyprlock/xdg-desktop-portal-hyprland stack for
+# fedora-44 and (b) was built against libdisplay-info.so.3 (Fedora 44 ships
+# libdisplay-info 0.3.0). eli-xciv/hyprland meets both — solopasha's aquamarine
+# still requires .so.2, and omadora ships only the deps for F44, not hyprland.
 FEDORA_VERSION="$(rpm -E %fedora)"
 curl -fsSL \
-  "https://copr.fedorainfracloud.org/coprs/omadora/hyprland-omadora/repo/fedora-${FEDORA_VERSION}/omadora-hyprland-omadora-fedora-${FEDORA_VERSION}.repo" \
-  -o /etc/yum.repos.d/_copr_omadora-hyprland-omadora.repo
+  "https://copr.fedorainfracloud.org/coprs/eli-xciv/hyprland/repo/fedora-${FEDORA_VERSION}/eli-xciv-hyprland-fedora-${FEDORA_VERSION}.repo" \
+  -o /etc/yum.repos.d/_copr_eli-xciv-hyprland.repo
 dnf5 makecache --refresh -y
 
 # --- Runtime stack ---
