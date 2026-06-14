@@ -4,6 +4,8 @@ set -euxo pipefail
 KANATA_VERSION="v1.11.0"
 KANATA_SHA256="d9f634afb4c7f078cc2aacf3998fd65b432d4d83296cc48a89f941525459b4e2"
 WAYLE_VERSION="v0.6.0"
+# sha256 of wayle-0.6.0-1.fc44.x86_64.rpm from the v0.6.0 SHA256SUMS asset.
+WAYLE_RPM_SHA256="7484bf10d56b3de323cb115abe2d0a10dc1b262e4a2e1f12924c2d5a0524c988"
 
 # --- blacktau/hyprland COPR ---
 # Fedora 44 retired the in-tree hyprland packages, so a third-party COPR is
@@ -69,34 +71,16 @@ KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"
 EOF
 echo uinput >/etc/modules-load.d/uinput.conf
 
-# --- Wayle: build from source, install to /usr, strip toolchain in same layer ---
-# libxkbcommon-devel and wayland-devel are required by transitive crates
-# (smithay-client-toolkit, etc.) even though upstream's Fedora list omits them.
-dnf5 install -y \
-  git cmake pkgconf-pkg-config clang gcc \
-  gtk4-devel gtk4-layer-shell-devel gtksourceview5-devel \
-  pulseaudio-libs-devel fftw-devel pipewire-devel systemd-devel \
-  libxkbcommon-devel wayland-devel \
-  rust cargo
-
-WAYLE_SRC="$(mktemp -d)"
-git clone --depth 1 --branch "${WAYLE_VERSION}" https://github.com/wayle-rs/wayle "$WAYLE_SRC"
-(
-  cd "$WAYLE_SRC"
-  CARGO_HOME="$WAYLE_SRC/.cargo" cargo install --locked --root /usr --path wayle
-  CARGO_HOME="$WAYLE_SRC/.cargo" cargo install --locked --root /usr --path crates/wayle-settings
-)
-rm -rf "$WAYLE_SRC"
-
-dnf5 remove -y \
-  rust cargo clang \
-  gtk4-devel gtk4-layer-shell-devel gtksourceview5-devel \
-  pulseaudio-libs-devel fftw-devel pipewire-devel systemd-devel \
-  libxkbcommon-devel wayland-devel \
-  cmake
-# Note: pkgconf-pkg-config is intentionally kept — it was already installed as
-# a dep of kmod (required by systemd-udev), and removing it breaks the base.
-dnf5 autoremove -y || true
+# --- Wayle: install the upstream prebuilt RPM (avoids the Rust toolchain) ---
+# Pinned to fc44 — when the base image moves to fc45 we'll need a matching
+# upstream RPM or to fall back to a source build for that window.
+WAYLE_TMP="$(mktemp -d)"
+WAYLE_RPM="${WAYLE_TMP}/wayle.rpm"
+curl -fsSL -o "${WAYLE_RPM}" \
+  "https://github.com/wayle-rs/wayle/releases/download/${WAYLE_VERSION}/wayle-${WAYLE_VERSION#v}-1.fc44.x86_64.rpm"
+echo "${WAYLE_RPM_SHA256}  ${WAYLE_RPM}" | sha256sum -c -
+dnf5 install -y "${WAYLE_RPM}"
+rm -rf "${WAYLE_TMP}"
 
 # --- Ship default skel configs ---
 if [ -d /ctx/skel ]; then
