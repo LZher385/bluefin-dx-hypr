@@ -5,24 +5,17 @@ KANATA_VERSION="v1.11.0"
 KANATA_SHA256="d9f634afb4c7f078cc2aacf3998fd65b432d4d83296cc48a89f941525459b4e2"
 WAYLE_VERSION="v0.6.0"
 
-# --- solopasha/hyprland COPR (provides hyprland, hyprlock, hypridle, hyprpaper, portal) ---
-FEDORA_VERSION="$(rpm -E %fedora)"
-curl -fsSL \
-  "https://copr.fedorainfracloud.org/coprs/solopasha/hyprland/repo/fedora-${FEDORA_VERSION}/solopasha-hyprland-fedora-${FEDORA_VERSION}.repo" \
-  -o /etc/yum.repos.d/_copr_solopasha-hyprland.repo
-dnf5 makecache --refresh -y
-
-# --- Runtime stack ---
+# --- Runtime stack (Fedora 44 ships hyprland + companions in main repos) ---
 # Note: xdg-desktop-portal-gtk, wl-clipboard, tmux, and fzf ship in the
 # bluefin-dx base image; dnf5 errors on "already installed", so they are
-# intentionally omitted here.
+# intentionally omitted. hypridle/hyprpaper are also omitted because Wayle's
+# `shell` subcommand provides idle and wallpaper management.
 dnf5 install -y \
   hyprland \
   xdg-desktop-portal-hyprland \
   hyprlock \
-  hypridle \
-  hyprpaper \
   kitty \
+  fuzzel \
   cliphist \
   brightnessctl \
   grim \
