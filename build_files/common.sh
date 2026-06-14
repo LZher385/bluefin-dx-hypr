@@ -5,12 +5,11 @@ KANATA_VERSION="v1.11.0"
 KANATA_SHA256="d9f634afb4c7f078cc2aacf3998fd65b432d4d83296cc48a89f941525459b4e2"
 WAYLE_VERSION="v0.6.0"
 
-# --- Terra repo (provides hyprland, hyprlock, hypridle, hyprpaper, portal) ---
-if ! dnf5 repolist --all | awk '{print $1}' | grep -qx terra; then
-  dnf5 install -y --nogpgcheck \
-    --repofrompath="terra,https://repos.fyralabs.com/terra\$releasever" \
-    terra-release
-fi
+# --- solopasha/hyprland COPR (provides hyprland, hyprlock, hypridle, hyprpaper, portal) ---
+FEDORA_VERSION="$(rpm -E %fedora)"
+curl -fsSL \
+  "https://copr.fedorainfracloud.org/coprs/solopasha/hyprland/repo/fedora-${FEDORA_VERSION}/solopasha-hyprland-fedora-${FEDORA_VERSION}.repo" \
+  -o /etc/yum.repos.d/_copr_solopasha-hyprland.repo
 dnf5 makecache --refresh -y
 
 # --- Runtime stack ---
