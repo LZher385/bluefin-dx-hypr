@@ -13,23 +13,22 @@ curl -fsSL \
 dnf5 makecache --refresh -y
 
 # --- Runtime stack ---
+# Note: xdg-desktop-portal-gtk, wl-clipboard, tmux, and fzf ship in the
+# bluefin-dx base image; dnf5 errors on "already installed", so they are
+# intentionally omitted here.
 dnf5 install -y \
   hyprland \
   xdg-desktop-portal-hyprland \
-  xdg-desktop-portal-gtk \
   hyprlock \
   hypridle \
   hyprpaper \
   kitty \
-  wl-clipboard \
   cliphist \
   brightnessctl \
   grim \
   slurp \
   pavucontrol \
-  tmux \
   fd-find \
-  fzf \
   ripgrep
 
 # --- kanata: fetch pinned release, verify sha256, install ---
