@@ -17,7 +17,21 @@ FEDORA_VERSION="$(rpm -E %fedora)"
 curl -fsSL \
   "https://copr.fedorainfracloud.org/coprs/blacktau/hyprland/repo/fedora-${FEDORA_VERSION}/blacktau-hyprland-fedora-${FEDORA_VERSION}.repo" \
   -o /etc/yum.repos.d/_copr_blacktau-hyprland.repo
-dnf5 makecache --refresh -y
+# COPR repo files ship skip_if_unavailable=True, which makes transient CDN
+# 404s during repodata fetch silently disable the repo — followed by an
+# unhelpful "No match for argument: hyprland". Force the repo to fail loudly
+# so the retry loop below can react.
+sed -i 's/^skip_if_unavailable=True$/skip_if_unavailable=False/' \
+  /etc/yum.repos.d/_copr_blacktau-hyprland.repo
+
+# COPR metadata hashes rotate while builds are pushed; retry through the race.
+for attempt in 1 2 3 4 5; do
+  if dnf5 makecache --refresh -y; then
+    break
+  fi
+  echo "dnf5 makecache attempt ${attempt} failed; retrying in 10s..."
+  sleep 10
+done
 
 # --- Runtime stack ---
 # Note: xdg-desktop-portal-gtk, wl-clipboard, tmux, and fzf ship in the
@@ -43,7 +57,7 @@ TMP="$(mktemp -d)"
 curl -fsSL -o "$TMP/kanata.zip" \
   "https://github.com/jtroo/kanata/releases/download/${KANATA_VERSION}/linux-binaries-x64.zip"
 echo "${KANATA_SHA256}  $TMP/kanata.zip" | sha256sum -c -
-( cd "$TMP" && bsdtar -xf kanata.zip )
+( cd "$TMP" && unzip -q kanata.zip )
 KANATA_BIN="$(find "$TMP" -maxdepth 3 -type f -name 'kanata*' ! -name '*.zip' -executable -print -quit \
   || find "$TMP" -maxdepth 3 -type f -name 'kanata*' ! -name '*.zip' -print -quit)"
 install -m0755 "$KANATA_BIN" /usr/bin/kanata
