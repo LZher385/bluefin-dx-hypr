@@ -10,11 +10,9 @@ local fileManager = "nautilus"
 local browser     = "flatpak run app.zen_browser.zen"
 
 -- Autostart
--- `wayle shell` runs the panel, notifications, OSD, systray, and wallpaper.
--- Idle-action (dim → lock → dpms off → suspend) is handled by hypridle, not wayle.
+-- `wayle shell` runs the panel, notifications, OSD, systray, wallpaper, and idle daemon in one process.
 hl.on("hyprland.start", function()
     hl.exec_cmd("wayle shell")
-    hl.exec_cmd("hypridle")
     hl.exec_cmd("kanshi")
     hl.exec_cmd("wl-paste --type text --watch cliphist store")
     hl.exec_cmd("wl-paste --type image --watch cliphist store")
@@ -63,11 +61,50 @@ hl.bind(mod .. " + SHIFT + S", hl.dsp.window.move({ direction = "right" }))
 hl.bind(mod .. " + SHIFT + T", hl.dsp.window.move({ direction = "down" }))
 hl.bind(mod .. " + SHIFT + D", hl.dsp.window.move({ direction = "up" }))
 
--- --- Workspaces 1-9 ---
-for i = 1, 9 do
-    hl.bind(mod .. " + " .. i,         hl.dsp.focus({ workspace = i }))
-    hl.bind(mod .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
+-- --- Named workspaces ---
+-- Workspace -> preferred monitor mapping.
+-- Hyprland workspaces are global; `monitor` is just a *preference*. If the
+-- preferred monitor isn't connected, the workspace auto-falls-back to a
+-- connected one — so kanshi profile switches (laptop / DP-3 / DP-3+DP-4)
+-- need no extra logic here.
+local workspaces = {
+    { key = "1", name = "brws", monitor = "DP-3" },  -- browsers
+    { key = "2", name = "code", monitor = "DP-3" },  -- editor / IDE
+    { key = "3", name = "term", monitor = "DP-4" },  -- terminals
+    { key = "4", name = "note", monitor = "DP-3" },  -- obsidian
+    { key = "5", name = "tele", monitor = "DP-4" },  -- telegram
+    { key = "6", name = "spot", monitor = "DP-4" },  -- spotify
+    { key = "7", name = "misc", monitor = "DP-3" },  -- miscellaneous
+}
+
+for _, w in ipairs(workspaces) do
+    hl.workspace_rule({
+        -- Pin the named workspace to a fixed numeric ID. The bar sorts by
+        -- workspace ID, so without this the buttons appear in first-visit
+        -- order rather than the declared order.
+        workspace    = w.key,
+        default_name = w.name,
+        monitor      = w.monitor,
+        persistent   = true,
+        default      = (w.key == "1"),
+    })
+    hl.bind(mod .. " + " .. w.key,         hl.dsp.focus({ workspace = w.key }))
+    hl.bind(mod .. " + SHIFT + " .. w.key, hl.dsp.window.move({ workspace = w.key }))
 end
+
+hl.bind(mod .. " + M",         hl.dsp.focus({ workspace = "7" }))
+hl.bind(mod .. " + SHIFT + M", hl.dsp.window.move({ workspace = "7" }))
+
+-- Pre-create every workspace at startup. `persistent = true` keeps a
+-- workspace alive once it exists, but doesn't actually instantiate it —
+-- without this, workspaces 1-7 don't appear in the bar until first visit
+-- (and Hyprland will hand you a fresh workspace 8 on login).
+hl.on("hyprland.start", function()
+    for _, w in ipairs(workspaces) do
+        hl.dsp.focus({ workspace = w.key })
+    end
+    hl.dsp.focus({ workspace = "1" })
+end)
 
 -- --- Workspace navigation ---
 hl.bind(mod .. " + J",   hl.dsp.focus({ workspace = "e+1" }))
@@ -125,3 +162,29 @@ hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 5%-"),      
 hl.bind(mod .. " + P",  hl.dsp.exec_cmd([[sh -c 'geom=$(slurp) || exit; f=$(mktemp --suffix=.png); grim -g "$geom" "$f" || { rm -f "$f"; exit; }; choice=$(printf "Copy to clipboard\nSave as file" | fuzzel --dmenu --prompt "Screenshot: "); case "$choice" in "Copy to clipboard") wl-copy < "$f"; rm "$f";; "Save as file") mkdir -p ~/Pictures/Screenshots; mv "$f" ~/Pictures/Screenshots/screenshot-$(date +%Y%m%d-%H%M%S).png;; *) rm "$f";; esac']]))
 hl.bind("CTRL + Print", hl.dsp.exec_cmd("grim - | wl-copy"))
 hl.bind("ALT + Print",  hl.dsp.exec_cmd([[grim -g "$(hyprctl activewindow -j | jq -r '"\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"')" - | wl-copy]]))
+
+-- --- Window -> workspace assignment ---
+-- The `class` field is a regex matched against the window's app_id (Wayland)
+-- or X11 class. To find the exact class for a running app: launch it, then run
+--     hyprctl clients | grep -E 'class|initialClass'
+-- Add ` silent` to the workspace value to send the window without stealing focus.
+-- Target numeric workspace IDs (1-7), matching the IDs pinned in the
+-- workspace_rule loop above. Using `name:foo` here would spawn a *new*
+-- dynamically-named workspace alongside the numbered one, even when the
+-- numbered workspace already has `default_name = foo`.
+local app_workspace_rules = {
+    { class = "^(app\\.zen_browser\\.zen|zen|firefox|chromium|Google-chrome)$", workspace = "1" },         -- brws
+    { class = "^(code|Code|VSCodium|jetbrains-.*)$",                            workspace = "2" },         -- code
+    { class = "^(Alacritty|alacritty|kitty|foot)$",                             workspace = "3 silent" },  -- term
+    { class = "^obsidian$",                                                     workspace = "4" },         -- note
+    { class = "^(org\\.telegram\\.desktop|TelegramDesktop|telegram-desktop)$",  workspace = "5 silent" },  -- tele
+    { class = "^(com\\.spotify\\.Client|spotify|Spotify)$",                     workspace = "6 silent" },  -- spot
+}
+
+for i, r in ipairs(app_workspace_rules) do
+    hl.window_rule({
+        name      = "assign-" .. i,
+        match     = { class = r.class },
+        workspace = r.workspace,
+    })
+end

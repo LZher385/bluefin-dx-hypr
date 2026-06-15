@@ -42,16 +42,11 @@ done
 # subcommand provides wallpaper management — but Wayle's wallpaper module
 # is a frontend that shells out to `swww` (or `awww`) as the rendering
 # backend, so swww must be on PATH for wallpapers to apply.
-#
-# hypridle handles idle-action (dim → lock → dpms off → suspend). Wayle's
-# "idle" module is idle-INHIBIT only (a bar toggle to block sleep while
-# watching video) — it does not run idle-action listeners, so hypridle is
-# still required.
 dnf5 install -y \
   hyprland \
   xdg-desktop-portal-hyprland \
   hyprlock \
-  hypridle \
+  swayidle \
   kitty \
   alacritty \
   fuzzel \
