@@ -16,6 +16,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("kanshi")
     hl.exec_cmd("wl-paste --type text --watch cliphist store")
     hl.exec_cmd("wl-paste --type image --watch cliphist store")
+    hl.dsp.focus({ workspace = "1" })
 end)
 
 hl.config({
@@ -61,32 +62,16 @@ hl.bind(mod .. " + SHIFT + S", hl.dsp.window.move({ direction = "right" }))
 hl.bind(mod .. " + SHIFT + T", hl.dsp.window.move({ direction = "down" }))
 hl.bind(mod .. " + SHIFT + D", hl.dsp.window.move({ direction = "up" }))
 
--- --- Workspace -> monitor preference ---
--- Hyprland workspaces are global; `monitor` here is just a *preference*. If
--- the preferred monitor isn't connected, the workspace falls back to a
--- connected one — so kanshi profile switches need no extra logic.
-local workspace_monitors = {
-    ["1"] = "DP-3",
-    ["2"] = "DP-3",
-    ["3"] = "DP-4",
-    ["4"] = "DP-3",
-    ["5"] = "DP-4",
-    ["6"] = "DP-4",
-    ["7"] = "DP-3",
-}
-
-for key, monitor in pairs(workspace_monitors) do
-    hl.workspace_rule({
-        workspace = key,
-        monitor   = monitor,
-        default   = (key == "1"),
-    })
-end
-
-for i = 1, 7 do
-    local key = tostring(i)
-    hl.bind(mod .. " + " .. key,         hl.dsp.focus({ workspace = key }))
-    hl.bind(mod .. " + SHIFT + " .. key, hl.dsp.window.move({ workspace = key }))
+-- --- Workspaces 1-10 ---
+-- Add `hl.workspace_rule({ workspace = "N", monitor = "DP-3" })` per workspace
+-- if you want to pin specific workspaces to specific monitors. Hyprland treats
+-- `monitor` as a preference and falls back to a connected output if the
+-- preferred one is absent, so kanshi profile switches need no extra logic.
+for i = 1, 10 do
+    local key = (i == 10) and "0" or tostring(i)
+    local workspace = tostring(i)
+    hl.bind(mod .. " + " .. key,         hl.dsp.focus({ workspace = workspace }))
+    hl.bind(mod .. " + SHIFT + " .. key, hl.dsp.window.move({ workspace = workspace }))
 end
 
 -- --- Workspace navigation ---
