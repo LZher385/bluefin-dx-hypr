@@ -42,12 +42,14 @@ hl.config({
 hl.bind(mod .. " + Return", hl.dsp.exec_cmd(terminal))
 hl.bind(mod .. " + E",      hl.dsp.exec_cmd(fileManager))
 hl.bind(mod .. " + B",      hl.dsp.exec_cmd(browser))
-hl.bind(mod .. " + Space",  hl.dsp.exec_cmd(menu))
-hl.bind(mod .. " + V",      hl.dsp.exec_cmd([[sh -c 'cliphist list | fuzzel --dmenu | cliphist decode | wl-copy']]))
+hl.bind(mod .. " + Space",         hl.dsp.exec_cmd(menu))
+hl.bind(mod .. " + SHIFT + Space", hl.dsp.exec_cmd([[sh -c '"$HOME"/.config/hypr/scripts/file-search.sh']]))
+hl.bind(mod .. " + W",             hl.dsp.exec_cmd([[sh -c '"$HOME"/.config/hypr/scripts/window-switcher.sh']]))
+hl.bind(mod .. " + V",             hl.dsp.exec_cmd([[sh -c 'cliphist list | fuzzel --dmenu | cliphist decode | wl-copy']]))
 
 -- --- Window / session ---
 hl.bind(mod .. " + Q",                hl.dsp.window.close())
-hl.bind(mod .. " + CTRL + SHIFT + Q", hl.dsp.exec_cmd([[sh -c 'choice=$(printf "Lock\nLogout\nSuspend\nReboot\nShutdown" | fuzzel --dmenu --prompt "Power: "); case "$choice" in Lock) hyprlock;; Logout) hyprctl dispatch exit;; Suspend) systemctl suspend;; Reboot) systemctl reboot;; Shutdown) systemctl poweroff;; esac']]))
+hl.bind(mod .. " + CTRL + SHIFT + Q", hl.dsp.exec_cmd([[sh -c 'choice=$(printf "Lock\nLogout\nSuspend\nReboot\nShutdown" | fuzzel --dmenu --prompt "Power: "); case "$choice" in Lock) hyprlock;; Logout) hyprctl dispatch '"'"'hl.dsp.exit()'"'"';; Suspend) systemctl suspend;; Reboot) systemctl reboot;; Shutdown) systemctl poweroff;; esac']]))
 hl.bind(mod .. " + Escape",           hl.dsp.exec_cmd("hyprlock"))
 
 -- --- Window focus (rtds, niri-style) ---
