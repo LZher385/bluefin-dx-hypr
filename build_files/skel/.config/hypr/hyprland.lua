@@ -1,6 +1,5 @@
 -- Default Hyprland config for bluefin-dx-hypr.
 -- Override per-user by editing ~/.config/hypr/hyprland.lua.
--- Hyprland 0.55+ prefers hyprland.lua over hyprland.conf when both are present.
 
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1 })
 
@@ -10,9 +9,13 @@ local menu        = "fuzzel"
 local fileManager = "nautilus"
 local browser     = "flatpak run app.zen_browser.zen"
 
--- `wayle shell` runs the panel, notifications, OSD, systray, wallpaper, and idle daemon in one process.
+-- Autostart
+-- `wayle shell` runs the panel, notifications, OSD, systray, and wallpaper.
+-- Idle-action (dim → lock → dpms off → suspend) is handled by hypridle, not wayle.
 hl.on("hyprland.start", function()
     hl.exec_cmd("wayle shell")
+    hl.exec_cmd("hypridle")
+    hl.exec_cmd("kanshi")
     hl.exec_cmd("wl-paste --type text --watch cliphist store")
     hl.exec_cmd("wl-paste --type image --watch cliphist store")
 end)
@@ -22,7 +25,7 @@ hl.config({
         kb_layout    = "us",
         follow_mouse = 1,
         touchpad = {
-            natural_scroll = true,
+            natural_scroll = false,
         },
     },
     general = {
@@ -45,7 +48,7 @@ hl.bind(mod .. " + V",      hl.dsp.exec_cmd([[sh -c 'cliphist list | fuzzel --dm
 
 -- --- Window / session ---
 hl.bind(mod .. " + Q",                hl.dsp.window.close())
-hl.bind(mod .. " + CTRL + SHIFT + Q", hl.dsp.exit())
+hl.bind(mod .. " + CTRL + SHIFT + Q", hl.dsp.exec_cmd([[sh -c 'choice=$(printf "Lock\nLogout\nSuspend\nReboot\nShutdown" | fuzzel --dmenu --prompt "Power: "); case "$choice" in Lock) hyprlock;; Logout) hyprctl dispatch exit;; Suspend) systemctl suspend;; Reboot) systemctl reboot;; Shutdown) systemctl poweroff;; esac']]))
 hl.bind(mod .. " + Escape",           hl.dsp.exec_cmd("hyprlock"))
 
 -- --- Window focus (rtds, niri-style) ---
@@ -101,10 +104,10 @@ hl.bind(mod .. " + CTRL + SHIFT + Down",  hl.dsp.workspace.move({ monitor = "d" 
 hl.bind(mod .. " + F",             hl.dsp.window.fullscreen({ mode = 1 }))
 hl.bind(mod .. " + SHIFT + F",     hl.dsp.window.fullscreen({ mode = 0 }))
 hl.bind(mod .. " + semicolon",     hl.dsp.window.float({ action = "toggle" }))
-hl.bind(mod .. " + minus",         hl.dsp.window.resize({ x = -100, y = 0 }))
-hl.bind(mod .. " + equal",         hl.dsp.window.resize({ x = 100,  y = 0 }))
-hl.bind(mod .. " + SHIFT + minus", hl.dsp.window.resize({ x = 0,    y = -100 }))
-hl.bind(mod .. " + SHIFT + equal", hl.dsp.window.resize({ x = 0,    y = 100 }))
+hl.bind(mod .. " + minus",         hl.dsp.window.resize({ x = -100, y = 0,    relative = true }))
+hl.bind(mod .. " + equal",         hl.dsp.window.resize({ x = 100,  y = 0,    relative = true }))
+hl.bind(mod .. " + SHIFT + minus", hl.dsp.window.resize({ x = 0,    y = -100, relative = true }))
+hl.bind(mod .. " + SHIFT + equal", hl.dsp.window.resize({ x = 0,    y = 100,  relative = true }))
 
 -- --- Scratchpad (special workspace) ---
 hl.bind(mod .. " + slash",         hl.dsp.workspace.toggle_special())
@@ -118,6 +121,7 @@ hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl set 5%+"),      
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 5%-"),                     { locked = true, repeating = true })
 
 -- --- Screenshots ---
-hl.bind("Print",        hl.dsp.exec_cmd([[grim -g "$(slurp)" - | wl-copy]]))
+-- mod+P: select area, then choose Copy or Save via fuzzel.
+hl.bind(mod .. " + P",  hl.dsp.exec_cmd([[sh -c 'geom=$(slurp) || exit; f=$(mktemp --suffix=.png); grim -g "$geom" "$f" || { rm -f "$f"; exit; }; choice=$(printf "Copy to clipboard\nSave as file" | fuzzel --dmenu --prompt "Screenshot: "); case "$choice" in "Copy to clipboard") wl-copy < "$f"; rm "$f";; "Save as file") mkdir -p ~/Pictures/Screenshots; mv "$f" ~/Pictures/Screenshots/screenshot-$(date +%Y%m%d-%H%M%S).png;; *) rm "$f";; esac']]))
 hl.bind("CTRL + Print", hl.dsp.exec_cmd("grim - | wl-copy"))
 hl.bind("ALT + Print",  hl.dsp.exec_cmd([[grim -g "$(hyprctl activewindow -j | jq -r '"\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"')" - | wl-copy]]))
