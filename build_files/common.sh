@@ -52,6 +52,7 @@ dnf5 install -y \
   grim \
   slurp \
   pavucontrol \
+  kanshi \
   fd-find \
   ripgrep \
   jq
