@@ -36,9 +36,9 @@ for attempt in 1 2 3 4 5; do
 done
 
 # --- Runtime stack ---
-# Note: xdg-desktop-portal-gtk, wl-clipboard, tmux, and fzf ship in the
-# bluefin-dx base image; dnf5 errors on "already installed", so they are
-# intentionally omitted. hyprpaper is also omitted because Wayle's `shell`
+# Note: xdg-desktop-portal-gtk, wl-clipboard, tmux, and fzf ship in both
+# the bluefin-dx and aurora-dx base images; dnf5 errors on "already
+# installed", so they are intentionally omitted. hyprpaper is also omitted because Wayle's `shell`
 # subcommand provides wallpaper management — but Wayle's wallpaper module
 # is a frontend that shells out to `swww` (or `awww`) as the rendering
 # backend, so swww must be on PATH for wallpapers to apply.
