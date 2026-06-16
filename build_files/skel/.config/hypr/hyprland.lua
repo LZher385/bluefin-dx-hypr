@@ -28,13 +28,36 @@ hl.config({
         },
     },
     general = {
-        gaps_in     = 4,
-        gaps_out    = 8,
-        border_size = 2,
-        layout      = "dwindle",
+        gaps_in          = 4,
+        gaps_out         = 8,
+        border_size      = 2,
+        layout           = "dwindle",
+        resize_on_border = true,
     },
     decoration = {
         rounding = 6,
+    },
+    animations = {
+        enabled = true,
+        bezier = {
+            { name = "snap",      points = { 0.05, 0.9, 0.1, 1.0 } },
+            { name = "overshoot", points = { 0.3,  1.3, 0.6, 1.0 } },
+        },
+        animation = {
+            { name = "windowsIn",        enabled = true, speed = 4,  curve = "overshoot", style = "popin 80%" },
+            { name = "windowsOut",       enabled = true, speed = 3,  curve = "snap",      style = "popin 80%" },
+            { name = "windowsMove",      enabled = true, speed = 4,  curve = "snap" },
+            { name = "fade",             enabled = true, speed = 4 },
+            { name = "border",           enabled = true, speed = 6 },
+            { name = "borderangle",      enabled = true, speed = 60, curve = "linear" },
+            { name = "workspaces",       enabled = true, speed = 4,  curve = "snap",      style = "slide" },
+            { name = "specialWorkspace", enabled = true, speed = 4,                       style = "slidevert" },
+        },
+    },
+    dwindle = {
+        preserve_split       = true,
+        force_split          = 2,
+        special_scale_factor = 0.9,
     },
 })
 
@@ -111,13 +134,15 @@ hl.bind(mod .. " + CTRL + SHIFT + Up",    hl.dsp.workspace.move({ monitor = "u" 
 hl.bind(mod .. " + CTRL + SHIFT + Down",  hl.dsp.workspace.move({ monitor = "d" }))
 
 -- --- Sizing & state ---
-hl.bind(mod .. " + F",             hl.dsp.window.fullscreen({ mode = 1 }))
-hl.bind(mod .. " + SHIFT + F",     hl.dsp.window.fullscreen({ mode = 0 }))
-hl.bind(mod .. " + semicolon",     hl.dsp.window.float({ action = "toggle" }))
-hl.bind(mod .. " + minus",         hl.dsp.window.resize({ x = -100, y = 0,    relative = true }))
-hl.bind(mod .. " + equal",         hl.dsp.window.resize({ x = 100,  y = 0,    relative = true }))
-hl.bind(mod .. " + SHIFT + minus", hl.dsp.window.resize({ x = 0,    y = -100, relative = true }))
-hl.bind(mod .. " + SHIFT + equal", hl.dsp.window.resize({ x = 0,    y = 100,  relative = true }))
+hl.bind(mod .. " + F",                 hl.dsp.window.fullscreen({ mode = 1 }))
+hl.bind(mod .. " + SHIFT + F",         hl.dsp.window.fullscreen({ mode = 0 }))
+hl.bind(mod .. " + semicolon",         hl.dsp.window.float({ action = "toggle" }))
+hl.bind(mod .. " + SHIFT + semicolon", hl.dsp.window.pseudo())
+
+-- --- Mouse drag (floating: move/resize freely; tiled: swap/adjust split) ---
+hl.bind(mod .. " + mouse:272", hl.dsp.window.drag({ action = "move" }))
+hl.bind(mod .. " + mouse:273", hl.dsp.window.drag({ action = "resize" }))
+
 
 -- --- Scratchpad (special workspace) ---
 hl.bind(mod .. " + slash",         hl.dsp.workspace.toggle_special())
